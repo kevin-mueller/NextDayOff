@@ -1,5 +1,27 @@
 ﻿@page "/"
-<PageTitle>Index</PageTitle>
+@using Newtonsoft.Json
+@using NextDayOff.Models
+<PageTitle>NextDayOff</PageTitle>
 
-<MudText Color="Color.Primary" Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
-<MudText Color="Color.Primary">Welcome to your new app, powered by MudBlazor!</MudText>
+<MudPaper>
+    <MudList>
+        @foreach (var day in Days)
+        {
+            <MudListItem Avatar="@Icons.Material.Filled.CalendarToday">
+                @day.LocalName @DateTime.Parse(day.Date).ToShortDateString()
+            </MudListItem>
+        }
+    </MudList>
+</MudPaper>
+
+@code {
+    List<Day> Days = new List<Day>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var res = JsonConvert.DeserializeObject<Day[]>(await new HttpClient().GetStringAsync($"https://date.nager.at/api/v3/publicholidays/{DateTime.Now.Year}/CH"));
+
+        Days = res.OrderBy(x => DateTime.Parse(x.Date)).ToList();
+        Days.RemoveAll(y => DateTime.Parse(y.Date) < DateTime.Now);
+    }
+}
